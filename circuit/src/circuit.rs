@@ -2,7 +2,7 @@
 
 use crate::crypto::{
 	accumulator::Accumulator,
-	alloc::{
+	eclair::alloc::{
 		mode::{Derived, Public, Secret},
 		Allocate, Allocator, Constant, Variable,
 	},

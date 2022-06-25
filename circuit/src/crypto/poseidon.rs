@@ -269,8 +269,8 @@ where
 pub mod arkworks {
 	use super::*;
 	use crate::crypto::{
-		alloc::Constant,
 		arkworks::{Fp, R1CS},
+		eclair::alloc::Constant,
 	};
 	use ark_ff::{BigInteger, Field, FpParameters, PrimeField};
 	use ark_r1cs_std::{

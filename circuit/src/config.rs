@@ -4,8 +4,8 @@ use crate::{
 	circuit::{self, Configuration},
 	crypto::{
 		accumulator,
-		alloc::Constant,
 		arkworks::{FpVar, R1CS},
+		eclair::alloc::Constant,
 		merkle_tree::{self, path::Path},
 		proofsystem::{arkworks::Groth16, ProofSystem},
 	},
