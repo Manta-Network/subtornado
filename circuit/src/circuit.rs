@@ -1,6 +1,7 @@
 //! Subtornado Circuits
 
 use crate::crypto::{
+	accumulator::Accumulator,
 	alloc::{
 		mode::{Derived, Public, Secret},
 		Allocate, Allocator, Constant, Variable,
@@ -8,21 +9,6 @@ use crate::crypto::{
 	proofsystem::ProofSystem,
 };
 use rand_core::{CryptoRng, RngCore};
-
-///
-pub trait Accumulator<T> {
-	///
-	type Root;
-
-	///
-	type MembershipProof;
-
-	///
-	fn insert(&mut self, item: T);
-
-	///
-	fn membership_proof(&self, item: &T) -> Option<(Self::Root, Self::MembershipProof)>;
-}
 
 ///
 pub trait Parameters<COM = ()> {

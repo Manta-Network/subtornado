@@ -941,6 +941,7 @@ dependencies = [
  "ark-serialize",
  "ark-snark",
  "ark-std",
+ "derivative",
  "parity-scale-codec",
  "rand_core 0.6.3",
  "scale-info",
