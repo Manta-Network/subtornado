@@ -2,7 +2,6 @@
 
 use alloc::vec::Vec;
 use core::{iter, mem};
-use rand_core::{RngCore, Sample};
 
 /// Field Element
 pub trait Field {
@@ -256,34 +255,30 @@ where
 		}
 		state
 	}
-}
 
-impl<S, const ARITY: usize, COM> ArrayHashFunction<ARITY, COM> for Hasher<S, ARITY, COM>
-where
-	S: Specification<COM>,
-{
-	type Input = S::Field;
-	type Output = S::Field;
-
+	/// Computes the hash over `input` in the given `compiler`.
 	#[inline]
-	fn hash(&self, input: [&Self::Input; ARITY], compiler: &mut COM) -> Self::Output {
+	pub fn hash(&self, input: [&S::Field; ARITY], compiler: &mut COM) -> S::Field {
 		let mut state = self.hash_untruncated(input, compiler);
 		state.truncate(1);
-		state.remove()
+		state.remove(0)
 	}
 }
 
 /// Arkworks Backend
 pub mod arkworks {
+	use super::*;
 	use crate::crypto::{
-		constraint::arkworks::{Fp, FpVar, R1CS},
-		hash::poseidon::FieldGeneration,
+		alloc::Constant,
+		arkworks::{Fp, R1CS},
 	};
 	use ark_ff::{BigInteger, Field, FpParameters, PrimeField};
-	use ark_r1cs_std::{alloc::AllocVar, fields::FieldVar};
-	use manta_crypto::constraint::Constant;
+	use ark_r1cs_std::{
+		alloc::AllocVar,
+		fields::{fp::FpVar, FieldVar},
+	};
 
-	/// Compiler Type.
+	/// Compiler Type
 	type Compiler<S> = R1CS<<S as Specification>::Field>;
 
 	/// Poseidon Permutation Specification.
@@ -499,35 +494,5 @@ pub mod arkworks {
 				mds_matrix: this.mds_matrix.clone(),
 			}
 		}
-	}
-}
-
-/// Testing Suite
-#[cfg(test)]
-mod test {
-	/// Tests if [`Poseidon2`](crate::config::Poseidon2) matches the known hash values.
-	#[test]
-	fn poseidon_hash_matches_known_values() {
-		/* TODO: After upgrading to new Poseidon, we have to enable these tests.
-		let hasher = Poseidon2::gen(&mut OsRng);
-		let inputs = [&Fp(field_new!(Fr, "1")), &Fp(field_new!(Fr, "2"))];
-		assert_eq!(
-			hasher.hash_untruncated(inputs, &mut ()),
-			vec![
-				Fp(field_new!(
-					Fr,
-					"1808609226548932412441401219270714120272118151392880709881321306315053574086"
-				)),
-				Fp(field_new!(
-					Fr,
-					"13469396364901763595452591099956641926259481376691266681656453586107981422876"
-				)),
-				Fp(field_new!(
-					Fr,
-					"28037046374767189790502007352434539884533225547205397602914398240898150312947"
-				)),
-			]
-		);
-		*/
 	}
 }
