@@ -16,7 +16,13 @@
 
 //! Merkle Tree Abstractions
 
-use super::path::{CurrentPath, Path};
+use super::path::{constraint::PathVar, CurrentPath, Path};
+use crate::crypto::eclair::{
+	self,
+	alloc::{Allocate, Constant},
+	bool::{Bool, ConditionalSwap},
+	Has,
+};
 use core::{fmt::Debug, hash::Hash, marker::PhantomData};
 
 #[cfg(feature = "serde")]
@@ -520,7 +526,6 @@ where
 		C::InnerHash::join_leaves(&self.inner, lhs, rhs, compiler)
 	}
 
-	/*
 	/// Verify that `path` witnesses the fact that `leaf` is a member of a merkle tree with the
 	/// given `root`.
 	#[inline]
@@ -534,12 +539,12 @@ where
 	where
 		C: Configuration<COM>,
 		COM: Has<bool>,
-		InnerDigest<C, COM>: ConditionalSwap<COM> + constraint::PartialEq<InnerDigest<C, COM>, COM>,
+		InnerDigest<C, COM>:
+			ConditionalSwap<COM> + eclair::cmp::PartialEq<InnerDigest<C, COM>, COM>,
 		LeafDigest<C, COM>: ConditionalSwap<COM>,
 	{
 		path.verify(self, root, leaf, compiler)
 	}
-	*/
 }
 
 impl<C> Parameters<C>
@@ -576,8 +581,6 @@ where
 	}
 }
 
-/*
-
 impl<C, COM> Constant<COM> for Parameters<C, COM>
 where
 	C: HashConfiguration<COM> + Constant<COM> + ?Sized,
@@ -592,6 +595,8 @@ where
 		Self::new(this.leaf.as_constant(compiler), this.inner.as_constant(compiler))
 	}
 }
+
+/*
 
 /// Parameter Decode Error
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]

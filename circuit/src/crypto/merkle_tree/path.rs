@@ -901,14 +901,15 @@ where
 	}
 }
 
-/*
-
 /// Constraint System Gadgets
 pub mod constraint {
 	use super::*;
-	use crate::{
-		constraint::{
-			Allocate, Allocator, Bool, ConditionalSwap, Constant, Has, PartialEq, Secret, Variable,
+	use crate::crypto::{
+		eclair::{
+			alloc::{mode::Secret, Allocate, Allocator, Constant, Variable},
+			bool::{Bool, ConditionalSwap},
+			cmp::PartialEq,
+			Has,
 		},
 		merkle_tree::path_length,
 	};
@@ -976,7 +977,7 @@ pub mod constraint {
 			parameters: &'d Parameters<C, COM>,
 			compiler: &'d mut COM,
 		) -> impl 'd
-			   + FnMut(
+		       + FnMut(
 			InnerDigest<C, COM>,
 			(&'d Bool<COM>, &'d InnerDigest<C, COM>),
 		) -> InnerDigest<C, COM> {
@@ -1131,5 +1132,3 @@ pub mod constraint {
 		}
 	}
 }
-
-*/

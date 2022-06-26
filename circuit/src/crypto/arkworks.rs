@@ -6,7 +6,7 @@ use crate::crypto::eclair::{
 		mode::{Public, Secret},
 		Constant, Variable,
 	},
-	bool::{Assert, ConditionalSwap},
+	bool::{Assert, AssertEq, ConditionalSwap},
 	Has,
 };
 use ark_ff::PrimeField;
@@ -41,7 +41,7 @@ pub fn full<T>(value: T) -> impl FnOnce() -> SynthesisResult<T> {
 }
 
 ///
-#[derive(Clone)]
+#[derive(Clone, Copy, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct Fp<F>(pub F)
 where
 	F: PrimeField;
@@ -116,6 +116,8 @@ where
 			.expect("Enforcing equality is not allowed to fail.");
 	}
 }
+
+impl<F> AssertEq for R1CS<F> where F: PrimeField {}
 
 impl<F> Constant<R1CS<F>> for Boolean<F>
 where
