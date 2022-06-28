@@ -929,25 +929,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "circuit"
-version = "0.1.0"
-dependencies = [
- "ark-bls12-381",
- "ark-ec",
- "ark-ff",
- "ark-groth16",
- "ark-r1cs-std",
- "ark-relations",
- "ark-serialize",
- "ark-snark",
- "ark-std",
- "derivative",
- "parity-scale-codec",
- "rand_core 0.6.3",
- "scale-info",
-]
-
-[[package]]
 name = "clang-sys"
 version = "1.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1037,6 +1018,25 @@ name = "constant_time_eq"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "245097e9a4535ee1e3e3931fcfcd55a796a44c643e8596ff6566d68f09b87bbc"
+
+[[package]]
+name = "core"
+version = "0.1.0"
+dependencies = [
+ "ark-bls12-381",
+ "ark-ec",
+ "ark-ff",
+ "ark-groth16",
+ "ark-r1cs-std",
+ "ark-relations",
+ "ark-serialize",
+ "ark-snark",
+ "ark-std",
+ "derivative",
+ "parity-scale-codec",
+ "rand_core 0.6.3",
+ "scale-info",
+]
 
 [[package]]
 name = "core-foundation"

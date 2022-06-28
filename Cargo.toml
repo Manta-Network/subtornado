@@ -3,7 +3,7 @@ members = [
     "node",
     "pallets/private-iou",
     "runtime",
-    "circuit",
+    "core",
 ]
 [profile.release]
 panic = "unwind"
