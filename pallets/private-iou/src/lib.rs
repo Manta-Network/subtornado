@@ -1,7 +1,6 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
-use codec::MaxEncodedLen;
-pub use pallet::*;
+extern crate alloc;
 
 /// Edit this file to define custom logic or remove it if it is not needed.
 /// Learn more about FRAME and the core library of Substrate FRAME pallets:
@@ -9,58 +8,78 @@ pub use pallet::*;
 #[cfg(test)]
 mod mock;
 
-use frame_support::pallet_prelude::{Encode, Decode};
+use alloc::vec::Vec;
+use codec::MaxEncodedLen;
+use frame_support::pallet_prelude::{Decode, Encode};
 use scale_info::TypeInfo;
 
+pub use pallet::*;
+
+///
 pub type Utxo = [u8; 32];
+
+///
 pub type VoidNumber = [u8; 32];
+
+///
 pub type Balance = u64;
+
+///
 pub type ZKP = [u8; 192];
+
+///
 pub type MerkleRoot = [u8; 32];
+
+///
 pub type HashDigest = [u8; 32];
+
+///
 pub const MERKLE_TREE_DEPTH: usize = 20;
+
+///
 pub const COIN_NOMINATION: Balance = 10;
 
+///
 #[derive(Clone, Debug, Decode, Default, Encode, MaxEncodedLen, Eq, PartialEq, TypeInfo)]
 pub struct UtxoMerkleTreePath {
-    /// Current Leaf Digest
-    pub leaf_digest: Option<HashDigest>,
+	/// Current Leaf Digest
+	pub leaf_digest: Option<HashDigest>,
 
-    /// Current Path
-    pub current_path: CurrentPath,
+	/// Current Path
+	pub current_path: CurrentPath,
 }
 
 /// Merkle Tree Current Path
 #[derive(Clone, Debug, Decode, Default, Encode, Eq, PartialEq, TypeInfo)]
 pub struct CurrentPath {
-    /// Sibling Digest
-    pub sibling_digest: HashDigest,
+	/// Sibling Digest
+	pub sibling_digest: HashDigest,
 
-    /// Leaf Index
-    pub leaf_index: u32,
+	/// Leaf Index
+	pub leaf_index: u32,
 
-    /// Inner Path
-    pub inner_path: Vec<HashDigest>,
+	/// Inner Path
+	pub inner_path: Vec<HashDigest>,
 }
 
 impl MaxEncodedLen for CurrentPath {
-    #[inline]
-    fn max_encoded_len() -> usize {
-        0_usize
-            .saturating_add(HashDigest::max_encoded_len())
-            .saturating_add(u32::max_encoded_len())
-            .saturating_add(
-                // NOTE: We know that these paths don't exceed the path length.
-                HashDigest::max_encoded_len().saturating_mul(MERKLE_TREE_DEPTH),
-            )
-    }
+	#[inline]
+	fn max_encoded_len() -> usize {
+		0_usize
+			.saturating_add(HashDigest::max_encoded_len())
+			.saturating_add(u32::max_encoded_len())
+			.saturating_add(
+				// NOTE: We know that these paths don't exceed the path length.
+				HashDigest::max_encoded_len().saturating_mul(MERKLE_TREE_DEPTH),
+			)
+	}
 }
 
 #[frame_support::pallet]
 pub mod pallet {
+	use crate::{Balance, MerkleRoot, Utxo, UtxoMerkleTreePath, VoidNumber, COIN_NOMINATION, ZKP};
 	use frame_support::pallet_prelude::*;
 	use frame_system::pallet_prelude::*;
-	use crate::{Utxo, VoidNumber, Balance, ZKP, MerkleRoot, UtxoMerkleTreePath, COIN_NOMINATION};
 
 	/// Configure the pallet by specifying the parameters and types on which it depends.
 	#[pallet::config]
@@ -75,27 +94,23 @@ pub mod pallet {
 
 	// Set of UTXOs
 	#[pallet::storage]
-	pub type UTXOSet<T> = 
-		StorageMap<_, Twox64Concat, Utxo, (), ValueQuery>;
+	pub type UTXOSet<T> = StorageMap<_, Twox64Concat, Utxo, (), ValueQuery>;
 
 	// Set of VoidNumbers
 	#[pallet::storage]
-	pub type VoidNumberSet<T> = 
-		StorageMap<_, Twox64Concat, VoidNumber, (), ValueQuery>;
-	
+	pub type VoidNumberSet<T> = StorageMap<_, Twox64Concat, VoidNumber, (), ValueQuery>;
+
 	// Set of VoidNumbers
 	#[pallet::storage]
-	pub type UtxoInsertionOrder<T> = 
-		StorageMap<_, Twox64Concat, u64, Utxo, ValueQuery>;
-	
+	pub type UtxoInsertionOrder<T> = StorageMap<_, Twox64Concat, u64, Utxo, ValueQuery>;
+
 	// Public balance
 	#[pallet::storage]
-	pub type PublicBalance<T: Config> = 
+	pub type PublicBalance<T: Config> =
 		StorageMap<_, Twox64Concat, T::AccountId, Balance, ValueQuery>;
-	
+
 	#[pallet::storage]
-	pub type Accumulator<T: Config> =
-		StorageValue<_, (MerkleRoot, UtxoMerkleTreePath)>;
+	pub type Accumulator<T: Config> = StorageValue<_, (MerkleRoot, UtxoMerkleTreePath)>;
 
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
@@ -125,7 +140,11 @@ pub mod pallet {
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-		pub fn public_transfer(origin: OriginFor<T>, destination: T::AccountId, value: Balance) -> DispatchResult {
+		pub fn public_transfer(
+			origin: OriginFor<T>,
+			destination: T::AccountId,
+			value: Balance,
+		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
 			// Update storage.
@@ -155,7 +174,7 @@ pub mod pallet {
 		#[pallet::weight(10_000 + T::DbWeight::get().reads_writes(1,1))]
 		pub fn mint_public_coin(origin: OriginFor<T>, value: Balance) -> DispatchResult {
 			let who = ensure_signed(origin)?;
-			let previous_balance = match PublicBalance::<T>::try_get(&who){
+			let previous_balance = match PublicBalance::<T>::try_get(&who) {
 				Ok(balance) => balance,
 				_ => 0u64,
 			};
@@ -164,14 +183,11 @@ pub mod pallet {
 			Ok(())
 		}
 
+		///
 		#[pallet::weight(10_000 + T::DbWeight::get().reads_writes(1,1))]
-		pub fn mint_private_iou(
-			origin: OriginFor<T>, 
-			utxo: Utxo, 
-			proof: ZKP
-		) -> DispatchResult {
+		pub fn mint_private_iou(origin: OriginFor<T>, utxo: Utxo, proof: ZKP) -> DispatchResult {
 			let who = ensure_signed(origin)?;
-			let previous_balance = match PublicBalance::<T>::try_get(&who){
+			let previous_balance = match PublicBalance::<T>::try_get(&who) {
 				Ok(balance) => balance,
 				_ => 0u64,
 			};
@@ -179,33 +195,29 @@ pub mod pallet {
 				return Err(Error::<T>::NotEnoughBalance.into())
 			}
 			// TODO: verify ZKP
-			ensure!(
-				!UTXOSet::<T>::contains_key(utxo),
-				Error::<T>::DuplicateUtxo
-			);
+			ensure!(!UTXOSet::<T>::contains_key(utxo), Error::<T>::DuplicateUtxo);
 			PublicBalance::<T>::insert(&who, previous_balance - COIN_NOMINATION);
 			Self::deposit_event(Event::<T>::PrivateIOUMint(who, COIN_NOMINATION, utxo, proof));
 			Ok(())
 		}
 
+		///
 		#[pallet::weight(10_000 + T::DbWeight::get().reads_writes(1,1))]
 		pub fn claim_private_iou(
-			origin: OriginFor<T>, 
+			origin: OriginFor<T>,
 			merkle_root: MerkleRoot,
 			void_number: VoidNumber,
-			proof: ZKP
+			proof: ZKP,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
-			let previous_balance = match PublicBalance::<T>::try_get(&who){
+			let previous_balance = match PublicBalance::<T>::try_get(&who) {
 				Ok(balance) => balance,
 				_ => 0u64,
 			};
-			// verify ZKP
-
+			// TODO: verify ZKP
 			PublicBalance::<T>::insert(&who, previous_balance + COIN_NOMINATION);
 			Self::deposit_event(Event::<T>::PrivateIOUClaimed(who, COIN_NOMINATION));
 			Ok(())
 		}
-
 	}
 }
