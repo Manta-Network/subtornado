@@ -3,12 +3,16 @@ name = "tornado"
 version = "0.1.0"
 edition = "2021"
 
+[[bin]]
+name = "cli"
+required-features = ["cli"]
+
 [features]
 cli = [
-	"anyhow",
-	"clap",
-	"hex",
-	"rand_core/getrandom",
+    "anyhow",
+    "clap",
+    "hex",
+    "rand_core/getrandom",
 ]
 
 [dependencies]

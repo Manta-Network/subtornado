@@ -15,7 +15,7 @@ use crate::{
 			test::HashParameterSampling,
 		},
 		poseidon,
-		proofsystem::{arkworks::Groth16, ProofSystem},
+		proofsystem::{self, arkworks::Groth16},
 		rand::{Rand, RngCore, Sample},
 	},
 };
@@ -313,11 +313,11 @@ pub struct Config;
 
 impl Configuration for Config {
 	type Compiler = Compiler;
-	type ProvingKey = <Self::ProofSystem as ProofSystem>::ProvingKey;
-	type VerifyingKey = <Self::ProofSystem as ProofSystem>::VerifyingKey;
-	type Proof = <Self::ProofSystem as ProofSystem>::Proof;
-	type Error = <Self::ProofSystem as ProofSystem>::Error;
-	type ProofSystem = Groth16<Pairing>;
+	type ProvingKey = ProvingKey;
+	type VerifyingKey = VerifyingKey;
+	type Proof = Proof;
+	type Error = <Self::ProofSystem as proofsystem::ProofSystem>::Error;
+	type ProofSystem = ProofSystem;
 	type Field = Scalar;
 	type MembershipProof = Path<MerkleTreeConfiguration>;
 	type Parameters = Parameters;
@@ -327,8 +327,10 @@ impl Configuration for Config {
 	type ParametersVar = ParametersVar;
 }
 
-pub type ProvingKey = <Groth16<Pairing> as ProofSystem>::ProvingKey;
-pub type VerifyingKey = <Groth16<Pairing> as ProofSystem>::VerifyingKey;
+pub type ProofSystem = Groth16<Pairing>;
+pub type ProvingKey = <ProofSystem as proofsystem::ProofSystem>::ProvingKey;
+pub type VerifyingKey = <ProofSystem as proofsystem::ProofSystem>::VerifyingKey;
+pub type Proof = <ProofSystem as proofsystem::ProofSystem>::Proof;
 
 /// Raw Types
 pub mod types {

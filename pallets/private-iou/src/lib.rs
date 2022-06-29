@@ -8,11 +8,13 @@ extern crate alloc;
 #[cfg(test)]
 mod mock;
 
-use alloc::vec::Vec;
+use alloc::{vec, vec::Vec};
 use codec::MaxEncodedLen;
 use frame_support::pallet_prelude::{Decode, Encode};
 use scale_info::TypeInfo;
-use tornado::config::types::*;
+use tornado::{
+	ark_serialize::CanonicalDeserialize, config::types::*, crypto::proofsystem::ProofSystem,
+};
 
 pub use pallet::*;
 
@@ -52,9 +54,57 @@ impl MaxEncodedLen for CurrentPath {
 	}
 }
 
+///
+#[inline]
+pub fn is_valid_mint(utxo: Utxo, proof: ZKP) -> bool {
+	let (_, (_, verifying_key), _) = tornado::parameters::generate();
+	let utxo = match CanonicalDeserialize::deserialize(utxo.as_slice()) {
+		Ok(utxo) => utxo,
+		_ => return false,
+	};
+	let proof = match CanonicalDeserialize::deserialize(proof.as_slice()) {
+		Ok(proof) => proof,
+		_ => return false,
+	};
+	match tornado::config::ProofSystem::verify(
+		&verifying_key,
+		&vec![COIN_NOMINATION.into(), utxo],
+		&proof,
+	) {
+		Ok(true) => true,
+		_ => false,
+	}
+}
+
+///
+#[inline]
+pub fn is_valid_claim(merkle_root: MerkleRoot, void_number: VoidNumber, proof: ZKP) -> bool {
+	let (_, _, (_, verifying_key)) = tornado::parameters::generate();
+	let merkle_root = match CanonicalDeserialize::deserialize(merkle_root.as_slice()) {
+		Ok(merkle_root) => merkle_root,
+		_ => return false,
+	};
+	let void_number = match CanonicalDeserialize::deserialize(void_number.as_slice()) {
+		Ok(void_number) => void_number,
+		_ => return false,
+	};
+	let proof = match CanonicalDeserialize::deserialize(proof.as_slice()) {
+		Ok(proof) => proof,
+		_ => return false,
+	};
+	match tornado::config::ProofSystem::verify(
+		&verifying_key,
+		&vec![COIN_NOMINATION.into(), merkle_root, void_number],
+		&proof,
+	) {
+		Ok(true) => true,
+		_ => false,
+	}
+}
+
 #[frame_support::pallet]
 pub mod pallet {
-	use crate::{Balance, MerkleRoot, Utxo, UtxoMerkleTreePath, VoidNumber, COIN_NOMINATION, ZKP};
+	use super::*;
 	use frame_support::pallet_prelude::*;
 	use frame_system::pallet_prelude::*;
 
@@ -101,14 +151,10 @@ pub mod pallet {
 	// Errors inform users that something went wrong.
 	#[pallet::error]
 	pub enum Error<T> {
-		/// Error names should be descriptive.
-		NoneValue,
-		/// Sender doesn't have enough balance
 		NotEnoughBalance,
-		/// Duplicate UTXO
 		DuplicateUtxo,
-		/// Errors should have helpful documentation associated with them.
-		StorageOverflow,
+		InvalidMintZKP,
+		InvalidClaimZKP,
 	}
 
 	// Dispatchable functions allows users to interact with the pallet and invoke state changes.
@@ -171,7 +217,7 @@ pub mod pallet {
 			if previous_balance < COIN_NOMINATION {
 				return Err(Error::<T>::NotEnoughBalance.into())
 			}
-			// TODO: verify ZKP
+			ensure!(is_valid_mint(utxo, proof), Error::<T>::InvalidMintZKP);
 			ensure!(!UTXOSet::<T>::contains_key(utxo), Error::<T>::DuplicateUtxo);
 			PublicBalance::<T>::insert(&who, previous_balance - COIN_NOMINATION);
 			Self::deposit_event(Event::<T>::PrivateIOUMint(who, COIN_NOMINATION, utxo, proof));
@@ -191,7 +237,7 @@ pub mod pallet {
 				Ok(balance) => balance,
 				_ => 0u64,
 			};
-			// TODO: verify ZKP
+			ensure!(is_valid_claim(merkle_root, void_number, proof), Error::<T>::InvalidClaimZKP);
 			PublicBalance::<T>::insert(&who, previous_balance + COIN_NOMINATION);
 			Self::deposit_event(Event::<T>::PrivateIOUClaimed(who, COIN_NOMINATION));
 			Ok(())
