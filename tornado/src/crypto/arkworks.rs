@@ -43,7 +43,7 @@ pub fn full<T>(value: T) -> impl FnOnce() -> SynthesisResult<T> {
 	move || Ok(value)
 }
 
-///
+/// Field Element
 #[derive(Clone, Copy, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct Fp<F>(pub F)
 where

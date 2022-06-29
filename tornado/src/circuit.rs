@@ -10,25 +10,17 @@ use crate::crypto::{
 };
 use rand_core::{CryptoRng, RngCore};
 
-///
 pub trait Parameters<COM = ()> {
-	///
 	type Field;
-
-	///
 	type MembershipProof;
 
-	///
 	fn assert_eq(&self, lhs: &Self::Field, rhs: &Self::Field, compiler: &mut COM);
 
-	///
 	fn utxo(&self, key: &Self::Field, value: &Self::Field, compiler: &mut COM) -> Self::Field;
 
-	///
 	fn void_number(&self, key: &Self::Field, utxo: &Self::Field, compiler: &mut COM)
 		-> Self::Field;
 
-	///
 	fn assert_membership(
 		&self,
 		utxo: &Self::Field,
@@ -38,7 +30,6 @@ pub trait Parameters<COM = ()> {
 	);
 }
 
-///
 pub trait Configuration {
 	type Compiler;
 	type ProvingKey;
@@ -70,7 +61,6 @@ pub trait Configuration {
 		> + Constant<Self::Compiler, Type = Self::Parameters>;
 }
 
-///
 pub struct Mint<C>
 where
 	C: Configuration,
@@ -84,14 +74,12 @@ impl<C> Mint<C>
 where
 	C: Configuration,
 {
-	///
 	#[inline]
 	pub fn new(parameters: &C::Parameters, key: C::Field, value: C::Field) -> Self {
 		Self { utxo: parameters.utxo(&key, &value, &mut ()), key, value }
 	}
 }
 
-///
 pub struct MintVar<C>
 where
 	C: Configuration,
@@ -105,7 +93,6 @@ impl<C> MintVar<C>
 where
 	C: Configuration,
 {
-	///
 	#[inline]
 	pub fn assert_valid(&self, parameters: &C::ParametersVar, compiler: &mut C::Compiler) {
 		parameters.assert_eq(
@@ -141,7 +128,6 @@ where
 	}
 }
 
-///
 pub struct MintPost<C>
 where
 	C: Configuration,
@@ -150,7 +136,6 @@ where
 	pub proof: C::Proof,
 }
 
-///
 #[inline]
 pub fn mint_keys<C, R>(
 	parameters: &C::Parameters,
@@ -169,7 +154,6 @@ where
 	C::ProofSystem::compile(compiler, rng)
 }
 
-///
 #[inline]
 pub fn mint<C, R>(
 	proving_key: &C::ProvingKey,
@@ -192,7 +176,6 @@ where
 	Ok(MintPost { utxo: data.utxo, proof: C::ProofSystem::prove(proving_key, compiler, rng)? })
 }
 
-///
 pub struct Claim<C>
 where
 	C: Configuration,
@@ -208,7 +191,6 @@ impl<C> Claim<C>
 where
 	C: Configuration,
 {
-	///
 	#[inline]
 	pub fn new(
 		parameters: &C::Parameters,
@@ -228,7 +210,6 @@ where
 	}
 }
 
-///
 pub struct ClaimVar<C>
 where
 	C: Configuration,
@@ -244,7 +225,6 @@ impl<C> ClaimVar<C>
 where
 	C: Configuration,
 {
-	///
 	#[inline]
 	pub fn assert_valid(&self, parameters: &C::ParametersVar, compiler: &mut C::Compiler) {
 		let utxo = parameters.utxo(&self.key, &self.value, compiler);
@@ -286,7 +266,6 @@ where
 	}
 }
 
-///
 pub struct ClaimPost<C>
 where
 	C: Configuration,
@@ -296,7 +275,6 @@ where
 	pub proof: C::Proof,
 }
 
-///
 #[inline]
 pub fn claim_keys<C, R>(
 	parameters: &C::Parameters,
@@ -315,7 +293,6 @@ where
 	C::ProofSystem::compile(compiler, rng)
 }
 
-///
 #[inline]
 pub fn claim<C, R>(
 	proving_key: &C::ProvingKey,

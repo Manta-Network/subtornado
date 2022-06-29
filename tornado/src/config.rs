@@ -20,25 +20,14 @@ use crate::{
 	},
 };
 
-/// Merkle Tree Height
 pub const MERKLE_TREE_HEIGHT: usize = 20;
 
-///
 pub type Pairing = ark_bls12_381::Bls12_381;
-
-///
 pub type ConstraintField = ark_bls12_381::Fr;
-
-///
 pub type Scalar = Fp<ConstraintField>;
-
-///
 pub type ScalarVar = FpVar<ConstraintField>;
-
-///
 pub type Compiler = R1CS<ConstraintField>;
 
-///
 pub struct PoseidonSpec<const ARITY: usize>;
 
 impl poseidon::arkworks::Specification for PoseidonSpec<2> {
@@ -48,13 +37,9 @@ impl poseidon::arkworks::Specification for PoseidonSpec<2> {
 	const SBOX_EXPONENT: u64 = 5;
 }
 
-///
 pub type Poseidon2 = poseidon::Hasher<PoseidonSpec<2>, 2>;
-
-///
 pub type Poseidon2Var = poseidon::Hasher<PoseidonSpec<2>, 2, Compiler>;
 
-///
 pub struct MerkleTreeInnerHash;
 
 impl merkle_tree::InnerHash for MerkleTreeInnerHash {
@@ -83,7 +68,6 @@ impl merkle_tree::InnerHash for MerkleTreeInnerHash {
 	}
 }
 
-///
 pub struct MerkleTreeInnerHashVar;
 
 impl merkle_tree::InnerHash<Compiler> for MerkleTreeInnerHashVar {
@@ -112,7 +96,6 @@ impl merkle_tree::InnerHash<Compiler> for MerkleTreeInnerHashVar {
 	}
 }
 
-///
 pub struct MerkleTreeConfiguration;
 
 impl merkle_tree::HashConfiguration for MerkleTreeConfiguration {
@@ -170,15 +153,9 @@ impl HashParameterSampling for MerkleTreeConfiguration {
 	}
 }
 
-///
 pub struct Parameters {
-	///
 	pub utxo_hash: Poseidon2,
-
-	///
 	pub void_number_hash: Poseidon2,
-
-	///
 	pub merkle_tree_parameters: merkle_tree::Parameters<MerkleTreeConfiguration>,
 }
 
@@ -226,15 +203,9 @@ impl circuit::Parameters for Parameters {
 	}
 }
 
-///
 pub struct ParametersVar {
-	///
 	pub utxo_hash: Poseidon2Var,
-
-	///
 	pub void_number_hash: Poseidon2Var,
-
-	///
 	pub merkle_tree_parameters: merkle_tree::Parameters<MerkleTreeConfiguration, Compiler>,
 }
 
@@ -290,7 +261,6 @@ impl Constant<Compiler> for ParametersVar {
 	}
 }
 
-///
 pub struct Accumulator(merkle_tree::full::FullMerkleTree<MerkleTreeConfiguration>);
 
 impl accumulator::Accumulator<Scalar> for Accumulator {
@@ -308,7 +278,6 @@ impl accumulator::Accumulator<Scalar> for Accumulator {
 	}
 }
 
-///
 pub struct Config;
 
 impl Configuration for Config {
@@ -342,6 +311,5 @@ pub mod types {
 	pub type MerkleRoot = [u8; 32];
 	pub type HashDigest = [u8; 32];
 
-	pub const MERKLE_TREE_DEPTH: usize = 20;
-	pub const COIN_NOMINATION: Balance = 10;
+	pub const MERKLE_TREE_DEPTH: usize = super::MERKLE_TREE_HEIGHT;
 }

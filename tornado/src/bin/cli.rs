@@ -5,21 +5,15 @@ use clap::{Parser, Subcommand};
 use rand_core::OsRng;
 use tornado::{config::types::Key, crypto::rand::Rand};
 
-///
 #[derive(Parser)]
 pub struct Args {
-	///
 	#[clap(subcommand)]
 	pub command: Command,
 }
 
-///
 #[derive(Subcommand)]
 pub enum Command {
-	///
 	Mint,
-
-	///
 	Claim { key: String },
 }
 
