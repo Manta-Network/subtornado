@@ -1,5 +1,6 @@
 //! Poseidon Hash Function
 
+use crate::crypto::rand::{Rand, RngCore, Sample};
 use alloc::vec::Vec;
 use core::{iter, mem};
 
@@ -262,6 +263,36 @@ where
 		let mut state = self.hash_untruncated(input, compiler);
 		state.truncate(1);
 		state.remove(0)
+	}
+}
+
+impl<D, S, const ARITY: usize, COM> Sample<D> for Hasher<S, ARITY, COM>
+where
+	D: Clone,
+	S: Specification<COM>,
+	S::ParameterField: Sample<D>,
+{
+	/// Samples random Poseidon parameters.
+	///
+	/// # Warning
+	///
+	/// This method samples the individual field elements of the parameters set, instead of
+	/// producing an actually correct/safe set of additive round keys and MDS matrix.
+	#[inline]
+	fn sample<R>(distribution: D, rng: &mut R) -> Self
+	where
+		R: RngCore + ?Sized,
+	{
+		Self {
+			additive_round_keys: rng
+				.sample_iter(
+					iter::repeat(distribution.clone()).take(Self::ADDITIVE_ROUND_KEYS_COUNT),
+				)
+				.collect(),
+			mds_matrix: rng
+				.sample_iter(iter::repeat(distribution).take(Self::MDS_MATRIX_SIZE))
+				.collect(),
+		}
 	}
 }
 

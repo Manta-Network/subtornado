@@ -12,9 +12,11 @@ use crate::{
 		merkle_tree::{
 			self,
 			path::{constraint::PathVar, Path},
+			test::HashParameterSampling,
 		},
 		poseidon,
 		proofsystem::{arkworks::Groth16, ProofSystem},
+		rand::{Rand, RngCore, Sample},
 	},
 };
 
@@ -141,6 +143,33 @@ impl Constant<Compiler> for MerkleTreeConfiguration {
 	}
 }
 
+impl HashParameterSampling for MerkleTreeConfiguration {
+	type LeafHashParameterDistribution = ();
+	type InnerHashParameterDistribution = ();
+
+	#[inline]
+	fn sample_leaf_hash_parameters<R>(
+		distribution: Self::LeafHashParameterDistribution,
+		rng: &mut R,
+	) -> merkle_tree::LeafHashParameters<Self>
+	where
+		R: RngCore + ?Sized,
+	{
+		let _ = (distribution, rng);
+	}
+
+	#[inline]
+	fn sample_inner_hash_parameters<R>(
+		distribution: Self::InnerHashParameterDistribution,
+		rng: &mut R,
+	) -> merkle_tree::InnerHashParameters<Self>
+	where
+		R: RngCore + ?Sized,
+	{
+		rng.sample(distribution)
+	}
+}
+
 ///
 pub struct Parameters {
 	///
@@ -151,6 +180,19 @@ pub struct Parameters {
 
 	///
 	pub merkle_tree_parameters: merkle_tree::Parameters<MerkleTreeConfiguration>,
+}
+
+impl Sample for Parameters {
+	fn sample<R>(_: (), rng: &mut R) -> Self
+	where
+		R: RngCore + ?Sized,
+	{
+		Self {
+			utxo_hash: rng.gen(),
+			void_number_hash: rng.gen(),
+			merkle_tree_parameters: rng.gen(),
+		}
+	}
 }
 
 impl circuit::Parameters for Parameters {
@@ -285,32 +327,19 @@ impl Configuration for Config {
 	type ParametersVar = ParametersVar;
 }
 
-///
+pub type ProvingKey = <Groth16<Pairing> as ProofSystem>::ProvingKey;
+pub type VerifyingKey = <Groth16<Pairing> as ProofSystem>::VerifyingKey;
+
+/// Raw Types
 pub mod types {
-	///
 	pub type Key = [u8; 32];
-
-	///
 	pub type Utxo = [u8; 32];
-
-	///
 	pub type VoidNumber = [u8; 32];
-
-	///
 	pub type Balance = u64;
-
-	///
 	pub type ZKP = [u8; 192];
-
-	///
 	pub type MerkleRoot = [u8; 32];
-
-	///
 	pub type HashDigest = [u8; 32];
 
-	///
 	pub const MERKLE_TREE_DEPTH: usize = 20;
-
-	///
 	pub const COIN_NOMINATION: Balance = 10;
 }

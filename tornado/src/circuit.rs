@@ -40,22 +40,11 @@ pub trait Parameters<COM = ()> {
 
 ///
 pub trait Configuration {
-	///
 	type Compiler;
-
-	///
 	type ProvingKey;
-
-	///
 	type VerifyingKey;
-
-	///
 	type Proof;
-
-	///
 	type Error;
-
-	///
 	type ProofSystem: ProofSystem<
 		Compiler = Self::Compiler,
 		ProvingKey = Self::ProvingKey,
@@ -63,31 +52,17 @@ pub trait Configuration {
 		Proof = Self::Proof,
 		Error = Self::Error,
 	>;
-
-	///
 	type Field;
-
-	///
 	type MembershipProof;
-
-	///
 	type Parameters: Parameters<Field = Self::Field, MembershipProof = Self::MembershipProof>;
-
-	///
 	type Accumulator: Accumulator<
 		Self::Field,
 		Root = Self::Field,
 		MembershipProof = Self::MembershipProof,
 	>;
-
-	///
 	type FieldVar: Variable<Public, Self::Compiler, Type = Self::Field>
 		+ Variable<Secret, Self::Compiler, Type = Self::Field>;
-
-	///
 	type MembershipProofVar: Variable<Secret, Self::Compiler, Type = Self::MembershipProof>;
-
-	///
 	type ParametersVar: Parameters<
 			Self::Compiler,
 			Field = Self::FieldVar,
@@ -96,21 +71,16 @@ pub trait Configuration {
 }
 
 ///
-pub struct ToPrivate<C>
+pub struct Mint<C>
 where
 	C: Configuration,
 {
-	///
 	pub key: C::Field,
-
-	///
 	pub value: C::Field,
-
-	///
 	pub utxo: C::Field,
 }
 
-impl<C> ToPrivate<C>
+impl<C> Mint<C>
 where
 	C: Configuration,
 {
@@ -122,21 +92,16 @@ where
 }
 
 ///
-pub struct ToPrivateVar<C>
+pub struct MintVar<C>
 where
 	C: Configuration,
 {
-	///
 	pub key: C::FieldVar,
-
-	///
 	pub value: C::FieldVar,
-
-	///
 	pub utxo: C::FieldVar,
 }
 
-impl<C> ToPrivateVar<C>
+impl<C> MintVar<C>
 where
 	C: Configuration,
 {
@@ -151,11 +116,11 @@ where
 	}
 }
 
-impl<C> Variable<Derived, C::Compiler> for ToPrivateVar<C>
+impl<C> Variable<Derived, C::Compiler> for MintVar<C>
 where
 	C: Configuration,
 {
-	type Type = ToPrivate<C>;
+	type Type = Mint<C>;
 
 	#[inline]
 	fn new_unknown(compiler: &mut C::Compiler) -> Self {
@@ -177,62 +142,69 @@ where
 }
 
 ///
-pub struct ToPrivatePost<C>
+pub struct MintPost<C>
 where
 	C: Configuration,
 {
-	///
 	pub utxo: C::Field,
-
-	///
 	pub proof: C::Proof,
 }
 
 ///
 #[inline]
-pub fn to_private<C, R>(
+pub fn mint_keys<C, R>(
+	parameters: &C::Parameters,
+	rng: &mut R,
+) -> Result<(C::ProvingKey, C::VerifyingKey), C::Error>
+where
+	C: Configuration,
+	R: CryptoRng + RngCore + ?Sized,
+{
+	let mut compiler = C::ProofSystem::for_compile();
+	MintVar::<C>::assert_valid(
+		&compiler.allocate_unknown(),
+		&parameters.as_constant(&mut compiler),
+		&mut compiler,
+	);
+	C::ProofSystem::compile(compiler, rng)
+}
+
+///
+#[inline]
+pub fn mint<C, R>(
 	proving_key: &C::ProvingKey,
 	parameters: &C::Parameters,
 	key: C::Field,
 	value: C::Field,
 	rng: &mut R,
-) -> Result<ToPrivatePost<C>, C::Error>
+) -> Result<MintPost<C>, C::Error>
 where
 	C: Configuration,
 	R: CryptoRng + RngCore + ?Sized,
 {
-	let data = ToPrivate::new(parameters, key, value);
+	let data = Mint::new(parameters, key, value);
 	let mut compiler = C::ProofSystem::for_prove();
-	ToPrivateVar::<C>::assert_valid(
+	MintVar::<C>::assert_valid(
 		&data.as_known(&mut compiler),
 		&parameters.as_constant(&mut compiler),
 		&mut compiler,
 	);
-	Ok(ToPrivatePost { utxo: data.utxo, proof: C::ProofSystem::prove(proving_key, compiler, rng)? })
+	Ok(MintPost { utxo: data.utxo, proof: C::ProofSystem::prove(proving_key, compiler, rng)? })
 }
 
 ///
-pub struct ToPublic<C>
+pub struct Claim<C>
 where
 	C: Configuration,
 {
-	///
 	pub key: C::Field,
-
-	///
 	pub value: C::Field,
-
-	///
 	pub root: C::Field,
-
-	///
 	pub membership_proof: C::MembershipProof,
-
-	///
 	pub void_number: C::Field,
 }
 
-impl<C> ToPublic<C>
+impl<C> Claim<C>
 where
 	C: Configuration,
 {
@@ -257,27 +229,18 @@ where
 }
 
 ///
-pub struct ToPublicVar<C>
+pub struct ClaimVar<C>
 where
 	C: Configuration,
 {
-	///
 	pub key: C::FieldVar,
-
-	///
 	pub value: C::FieldVar,
-
-	///
 	pub root: C::FieldVar,
-
-	///
 	pub membership_proof: C::MembershipProofVar,
-
-	///
 	pub void_number: C::FieldVar,
 }
 
-impl<C> ToPublicVar<C>
+impl<C> ClaimVar<C>
 where
 	C: Configuration,
 {
@@ -294,11 +257,11 @@ where
 	}
 }
 
-impl<C> Variable<Derived, C::Compiler> for ToPublicVar<C>
+impl<C> Variable<Derived, C::Compiler> for ClaimVar<C>
 where
 	C: Configuration,
 {
-	type Type = ToPublic<C>;
+	type Type = Claim<C>;
 
 	#[inline]
 	fn new_unknown(compiler: &mut C::Compiler) -> Self {
@@ -324,42 +287,56 @@ where
 }
 
 ///
-pub struct ToPublicPost<C>
+pub struct ClaimPost<C>
 where
 	C: Configuration,
 {
-	///
 	pub root: C::Field,
-
-	///
 	pub void_number: C::Field,
-
-	///
 	pub proof: C::Proof,
 }
 
 ///
 #[inline]
-pub fn to_public<C, R>(
+pub fn claim_keys<C, R>(
+	parameters: &C::Parameters,
+	rng: &mut R,
+) -> Result<(C::ProvingKey, C::VerifyingKey), C::Error>
+where
+	C: Configuration,
+	R: CryptoRng + RngCore + ?Sized,
+{
+	let mut compiler = C::ProofSystem::for_compile();
+	ClaimVar::<C>::assert_valid(
+		&compiler.allocate_unknown(),
+		&parameters.as_constant(&mut compiler),
+		&mut compiler,
+	);
+	C::ProofSystem::compile(compiler, rng)
+}
+
+///
+#[inline]
+pub fn claim<C, R>(
 	proving_key: &C::ProvingKey,
 	parameters: &C::Parameters,
 	accumulator: &C::Accumulator,
 	key: C::Field,
 	value: C::Field,
 	rng: &mut R,
-) -> Result<ToPublicPost<C>, C::Error>
+) -> Result<ClaimPost<C>, C::Error>
 where
 	C: Configuration,
 	R: CryptoRng + RngCore + ?Sized,
 {
-	let data = ToPublic::new(parameters, accumulator, key, value).expect("FIXME");
+	let data = Claim::new(parameters, accumulator, key, value).expect("FIXME");
 	let mut compiler = C::ProofSystem::for_prove();
-	ToPublicVar::<C>::assert_valid(
+	ClaimVar::<C>::assert_valid(
 		&data.as_known(&mut compiler),
 		&parameters.as_constant(&mut compiler),
 		&mut compiler,
 	);
-	Ok(ToPublicPost {
+	Ok(ClaimPost {
 		root: data.root,
 		void_number: data.void_number,
 		proof: C::ProofSystem::prove(proving_key, compiler, rng)?,

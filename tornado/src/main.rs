@@ -2,8 +2,8 @@
 
 use anyhow::{bail, Result};
 use clap::{Parser, Subcommand};
-use rand::{thread_rng, Rng};
-use tornado::config::types::Key;
+use rand_core::OsRng;
+use tornado::{config::types::Key, crypto::rand::Rand};
 
 ///
 #[derive(Parser)]
@@ -24,11 +24,11 @@ pub enum Command {
 }
 
 fn main() -> Result<()> {
-	let mut rng = thread_rng();
+	let mut rng = OsRng;
 	let args = Args::try_parse()?;
 	match args.command {
 		Command::Mint => {
-			let key = rng.gen::<Key>();
+			let key = rng.gen::<_, Key>();
 			// TODO: let post = to_private(proving_key, parameters, key, value, &mut rng)?;
 			// println!("UTXO: {:?}", post.utxo);
 			// println!("ZKP: {:?}", post.proof);

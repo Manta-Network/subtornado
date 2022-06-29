@@ -5,4 +5,5 @@ extern crate alloc;
 pub mod circuit;
 pub mod config;
 pub mod crypto;
+pub mod parameters;
 pub mod util;

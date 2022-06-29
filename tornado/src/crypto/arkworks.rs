@@ -1,15 +1,18 @@
 //! Arkworks Backend
 
-use crate::crypto::eclair::{
-	self,
-	alloc::{
-		mode::{Public, Secret},
-		Constant, Variable,
+use crate::crypto::{
+	eclair::{
+		self,
+		alloc::{
+			mode::{Public, Secret},
+			Constant, Variable,
+		},
+		bool::{Assert, AssertEq, ConditionalSwap},
+		Has,
 	},
-	bool::{Assert, AssertEq, ConditionalSwap},
-	Has,
+	rand::{RngCore, Sample},
 };
-use ark_ff::PrimeField;
+use ark_ff::{PrimeField, UniformRand};
 use ark_r1cs_std::{alloc::AllocVar, eq::EqGadget, select::CondSelectGadget};
 use ark_relations::{
 	ns, r1cs as ark_r1cs,
@@ -45,6 +48,19 @@ pub fn full<T>(value: T) -> impl FnOnce() -> SynthesisResult<T> {
 pub struct Fp<F>(pub F)
 where
 	F: PrimeField;
+
+impl<F> Sample for Fp<F>
+where
+	F: PrimeField,
+{
+	#[inline]
+	fn sample<R>(_: (), rng: &mut R) -> Self
+	where
+		R: RngCore + ?Sized,
+	{
+		Self(UniformRand::rand(rng))
+	}
+}
 
 /// Arkworks Rank-1 Constraint System
 pub struct R1CS<F>
