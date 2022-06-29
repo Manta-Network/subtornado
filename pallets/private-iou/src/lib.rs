@@ -12,32 +12,9 @@ use alloc::vec::Vec;
 use codec::MaxEncodedLen;
 use frame_support::pallet_prelude::{Decode, Encode};
 use scale_info::TypeInfo;
+use tornado::config::types::*;
 
 pub use pallet::*;
-
-///
-pub type Utxo = [u8; 32];
-
-///
-pub type VoidNumber = [u8; 32];
-
-///
-pub type Balance = u64;
-
-///
-pub type ZKP = [u8; 192];
-
-///
-pub type MerkleRoot = [u8; 32];
-
-///
-pub type HashDigest = [u8; 32];
-
-///
-pub const MERKLE_TREE_DEPTH: usize = 20;
-
-///
-pub const COIN_NOMINATION: Balance = 10;
 
 ///
 #[derive(Clone, Debug, Decode, Default, Encode, MaxEncodedLen, Eq, PartialEq, TypeInfo)]

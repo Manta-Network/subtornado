@@ -3,7 +3,8 @@ members = [
     "node",
     "pallets/private-iou",
     "runtime",
-    "core",
+    "tornado",
+    # "tornado-parameters",
 ]
 [profile.release]
 panic = "unwind"

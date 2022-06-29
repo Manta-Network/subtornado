@@ -1,0 +1,32 @@
+[package]
+name = "tornado"
+version = "0.1.0"
+edition = "2021"
+
+[features]
+cli = [
+	"anyhow",
+	"clap",
+	"hex",
+	"rand",
+]
+
+[dependencies]
+anyhow = { version = "1.0.58", optional = true }
+ark-bls12-381 = { version = "0.3.0", default-features = false, features = ["curve"] }
+ark-ec = { version = "0.3.0", default-features = false }
+ark-ff = { version = "0.3.0", default-features = false }
+ark-groth16 = { version = "0.3.0", default-features = false }
+ark-r1cs-std = { version = "0.3.1", default-features = false }
+ark-relations = { version = "0.3.0", default-features = false }
+ark-serialize = { version = "0.3.0", default-features = false }
+ark-snark = { version = "0.3.0", default-features = false }
+ark-std = { version = "0.3.0", default-features = false }
+clap = { version = "3.2.7", optional = true, features = ["derive"] }
+derivative = { version = "2.2.0", default-features = false, features = ["use_core"] }
+hex = { version = "0.4.3", optional = true }
+rand = { version = "0.8.5", optional = true }
+rand_core = { version = "0.6.3", default-features = false }
+scale-codec = { package = "parity-scale-codec", version = "3.1.2", optional = true, default-features = false, features = ["derive", "max-encoded-len"] }
+scale-info = { version = "2.1.2", optional = true, default-features = false, features = ["derive"] }
+
